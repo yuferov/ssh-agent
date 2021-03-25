@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+  master:
+    image: jenkins/jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    networks: 
+      net:
+        aliases:
+          - "jenkins-master"
+    volumes:
+      - /var/jenkins_data/master:/var/jenkins_home
+  agent:
+    image: ssh-agent:2.0
+    ports:
+      - "2222:22"
+    networks:
+      net:
+        aliases:
+          - "jenkins-slave1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/jenkins_data/slave1:/var/jenkins_home
+
+networks:
+  net:
