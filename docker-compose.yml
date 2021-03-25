@@ -2,7 +2,7 @@ version: "3"
 
 services:
   master:
-    image: jenkins/jenkins
+    image: jenkins/jenkins:2.277.1-lts-centos
     ports:
       - "8080:8080"
       - "50000:50000"
