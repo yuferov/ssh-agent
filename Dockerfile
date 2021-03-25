@@ -1,27 +1,33 @@
-FROM centos:7
+FROM centos:7.8.2003
 
-RUN yum install -y epel-release
-RUN yum install -y ansible \
-    python3 \
-    java-1.8.0-openjdk \
+ENV DOCKER_REPO=https://download.docker.com/linux/centos/docker-ce.repo
+ENV PYTHON=python3
+ENV JAVA=java-1.8.0-openjdk
+ENV SSH_PATH=/home/jenkins/.ssh
+ENV PUB_KEY=jenkins-master
+ENV HOME=/home/jenkins
+ENV GID=994
+
+
+RUN yum install -y epel-release \
+    yum-utils && \
+    yum-config-manager --add-repo $DOCKER_REPO && \
+    yum install -y ansible \
+    $PYTHON \
+    $JAVA \
     git \
-    openssh-server && \
-    useradd jenkins
+    openssh-server \
+    docker-ce && \
+    ssh-keygen -A && \
+    useradd -MG docker jenkins
 
-RUN yum install -y yum-utils && \
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
-    yum install -y docker-ce && \
-    usermod -aG docker jenkins && \
-    ssh-keygen -A
-
-USER jenkins
-
-RUN mkdir /home/jenkins/.ssh && \
-    chmod 0700 /home/jenkins/.ssh && \
-    echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDLDQ/BJo7QNlavXm/mlvFTIl/tfxMvwI/3kxG08DgbUoRay0RNmtot/R2ULdlwbvUuXBfYkgwmFYHwmYRUZ0E9ILejjETKkn63OiTKtugVFKGyvEm0U2o7nR9Txolh1ig5uexdoJcqymBDqcDNs9t/rbzSa4bwjV6r2T4XqHTVBwThWlUqC6nKWjS6tdX7RaXsAujLdyR5+IPCZq93klnp6g2bWQlNk1B+ABQ1ZwCPkg7ka22ibMj3Dy1DK9/IECbkulMz1e4nO+x8VJvYXureeQO3CIMspfbMyd6GXLGgNfA0sWuGvvYCNgapVCPx+HRgG/tghHqGu/9m/ZQVjoz/" >> /home/jenkins/.ssh/authorized_keys && \
-    chmod 0600 /home/jenkins/.ssh/authorized_keys
-
-USER root
+WORKDIR $SSH_PATH
+COPY $PUB_KEY.pub $PUB_KEY.pub
+RUN cat $PUB_KEY.pub >> authorized_keys && \
+    chown -R jenkins:jenkins $HOME && \
+    chmod 0600 authorized_keys && \
+    chmod 0700 $SSH_PATH && \
+    groupmod -g $GID docker
 
 ENV container docker
 RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == \
@@ -37,4 +43,3 @@ VOLUME [ "/sys/fs/cgroup" ]
 
 ENTRYPOINT [ "/usr/sbin/sshd" ]
 CMD [ "-D" ]
-
