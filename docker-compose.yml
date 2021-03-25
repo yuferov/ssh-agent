@@ -2,7 +2,8 @@ version: "3"
 
 services:
   master:
-    image: jenkins/jenkins:2.277.1-lts-centos
+    image: jenkins/jenkins:2.285-centos7
+    container_name: "jenkins-master"
     ports:
       - "8080:8080"
       - "50000:50000"
@@ -13,7 +14,11 @@ services:
     volumes:
       - /var/jenkins_data/master:/var/jenkins_home
   agent:
-    image: ssh-agent:2.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: jenkins-agent:2.0
+    container-name: "jenkins-agent"
     ports:
       - "2222:22"
     networks:
